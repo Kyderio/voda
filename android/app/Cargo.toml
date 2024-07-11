@@ -1,0 +1,18 @@
+[package]
+name = "voda"
+version = "0.1.0"
+authors = ["Stefan Kimmer <skimmer@s2e-systems.com>"]
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+gstreamer = "0.22.6"
+gstreamer-app = "0.22.6"
+gstreamer-video = "0.22.6"
+gstreamer-video-sys = "0.22.6"
+glib = "0.19.9"
+dust_dds = { version = "0.10" }
+jni = { version = "0.21.1", default-features = false }
+ndk-sys = "0.6.0"

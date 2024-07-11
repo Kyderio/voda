@@ -13,35 +13,60 @@ tasks.register('configure_gstreamer_java', Copy) {
     from "${System.env.GSTREAMER_1_0_ROOT_ANDROID}/x86/share/gst-android/ndk-build/"
     include 'GStreamer.java'
     include 'androidmedia/GstAhcCallback.java'
-    into layout.buildDirectory.dir('from-gst-android/org/freedesktop/gstreamer')
+    into layout.buildDirectory.dir('generated_from_gst_android/org/freedesktop/gstreamer')
     filter(ReplaceTokens, tokens: [INCLUDE_CA_CERTIFICATES: '//', INCLUDE_FONTS: '//', INCLUDE_COPY_FILE: '//'])
 }
 
 android {
-    compileSdk 34
+    compileSdk 35
     ndkVersion "25.2.9519653" //r25c
     defaultConfig {
-        applicationId "com.s2e_systems.publisher"
-        minSdkVersion 28
+        applicationId "com.s2e_systems.voda"
+        minSdk 26
+        targetSdk 35
         versionCode 1
         versionName "1.0"
+    }
+    signingConfigs {
+        release {
+            def keystorePropertiesFile = rootProject.file("keystore.properties")
+            def keystoreProperties = new Properties()
+            if (keystorePropertiesFile.exists()) {
+                keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+                storeFile file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+            }
+        }
+    }
+    buildTypes {
+        release {
+            debuggable false
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+        }
     }
     layout.buildDirectory = new File(rootProject.projectDir, "/build/gradle/" + project.name)
 
     buildFeatures {
         viewBinding = true
     }
-    sourceSets.main.java.srcDirs += layout.buildDirectory.dir('from-gst-android')
+    sourceSets.main.java.srcDirs += layout.buildDirectory.dir('generated_from_gst_android')
     namespace 'com.s2e_systems'
 }
 
 
 cargo {
     module = "."
+    targetDirectory = "../../target"
     libname = "voda"
     targets = ["arm", "x86", "arm64", "x86_64"]
     verbose = true
     prebuiltToolchains = true
+    profile = 'release'
     exec { spec, toolchain ->
         // Host tag as described in https://developer.android.com/ndk/guides/other_build_systems
         String host_tag = ""
@@ -81,7 +106,7 @@ cargo {
         rustflag_list.add("-lc++abi")
         rustflag_list.add("-lffi -lz")
         rustflag_list.add("-liconv -lorc-0.4 -lgmodule-2.0 -lpcre2-8")
-        rustflag_list.add("-lgstcoreelements -lgstvideo-1.0 -lgstapp")
+        rustflag_list.add("-lgstcoreelements -lgstvideo-1.0 -lgstapp -lgstvideofilter")
         rustflag_list.add("-lgstopengl -lgstgl-1.0 -lgstcontroller-1.0 -lgraphene-1.0 -ljpeg -lpng16")
         rustflag_list.add("-lopenh264 -lgstopenh264 -lgstpbutils-1.0 -lgstvideoconvertscale")
         rustflag_list.add("-lgstandroidmedia -lgstaudio-1.0 -lgstphotography-1.0")

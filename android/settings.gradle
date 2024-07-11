@@ -1,3 +1,2 @@
-include ':publisher'
-include ':subscriber'
+include ':app'
 rootProject.name = "VoDA"
